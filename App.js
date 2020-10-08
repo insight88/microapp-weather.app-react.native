@@ -1,31 +1,42 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert } from "react-native"
+import Loading from "./Loading"
+import * as Location from "expo-location"
+import axios from "axios"
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.yellowView}><Text>Hello</Text></View>
-      <View style={styles.blueView}><Text>Hello</Text></View>
-    </View>
-  );
+const API_KEY = "f7af4e43dc6cd5644e1da1cab4dd175b"
+
+export default class extends React.Component {
+  state = {
+    isLoading: true
+  }
+  getWeather = async (latitude, longitude) => {
+    const { data } = await axios.get(
+      `http://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
+    )
+    console.log(data)
+  }
+  getLocation = async() => {
+    try {
+      await Location.requestPermissionsAsync()
+      // * expo-location
+      const { 
+        coords: { latitude, longitude } 
+      } = await Location.getCurrentPositionAsync()
+      // * expo-location
+      this.getWeather(latitude, longitude)
+      this.setState({ isLoading: false })
+    } catch {
+      Alert.alert("Can't find your location")
+    }
+
+  }
+  componentDidMount() {
+    this.getLocation();
+  }
+  render() {
+    const { isLoading } = this.state
+    return isLoading ? <Loading /> : null;
+  }
 }
 
-// * react-native style은 기본적으로 flexDirection : "column"
-// * 화면 크기에 따른 responsive design을 위해서 flex로 구역 크기를 설정하는 것을 추천
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  },
-  yellowView: {
-    flex: 1,
-    backgroundColor: 'yellow',
-    textAlign: "center"
-  },
-  blueView: {
-    flex: 3,
-    backgroundColor: 'skyblue',
-    textAlign: "center"
-  }
-});
